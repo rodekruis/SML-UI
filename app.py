@@ -78,6 +78,11 @@ def default_page():
         return render_template('home.html')
 
 
+@app.route("/backtomenu", methods=['POST'])
+def back_to_default_page():
+    return render_template('menu.html')
+
+
 @app.route("/classify", methods=['POST'])
 def classify():
     return render_template('classify.html',
@@ -102,7 +107,9 @@ def check_selection():
     payload['start_date'] = datetime.strptime(payload['start_date'], '%Y-%m-%d')
     payload['end_date'] = datetime.strptime(payload['end_date'], '%Y-%m-%d')
     df = read_db("TL", country_codes[payload['country']], payload['start_date'], payload['end_date'])
+    df_date_count = df.groupby('date')['ID'].count()
     return render_template('selection.html',
+                           date_count=df_date_count.to_dict(),
                            number_messages=len(df),
                            country=payload['country'],
                            start_date=payload['start_date'].strftime('%Y-%m-%d'),

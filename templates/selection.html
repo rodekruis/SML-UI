@@ -16,6 +16,9 @@
                         <label for="" class="label">We found {{ number_messages }} messages currently available for {{ country }} from {{ start_date }} to {{ end_date }}.</label>
                     </div>
                 </div>
+                {% for date, count in date_count.items() %}
+                  <label for="" class="label is-small">{{ date }}: {{ count }}</label>
+                {% endfor %}
             </div>
         </div>
     </div>
