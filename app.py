@@ -10,7 +10,7 @@ import pyodbc
 import json
 
 app = Flask(__name__)
-load_dotenv()  # take environment variables from .env
+load_dotenv("credentials/.env")  # take environment variables from .env
 country_codes = {
     "ukraine": "UKR",
     "slovakia": "SVK",
