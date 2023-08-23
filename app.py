@@ -17,7 +17,8 @@ country_codes = {
     "poland": "POL",
     "romania": "ROU",
     "bulgaria": "BGR",
-    "moldova": "MDA"
+    "moldova": "MDA",
+    "hungary": "HUN"
 }
 
 
