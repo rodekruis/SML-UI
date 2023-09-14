@@ -8,6 +8,7 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 import pyodbc
 import json
+from datetime import date, timedelta
 
 app = Flask(__name__)
 load_dotenv("credentials/.env")  # take environment variables from .env
@@ -89,12 +90,17 @@ def back_to_default_page():
 @app.route("/classify", methods=['POST'])
 def classify():
     return render_template('classify.html',
+                           start_date=str(date.today()-timedelta(days=14)),
+                           end_date=str(date.today()),
                            countries=json.loads(os.getenv('COUNTRIES')))
 
 
 @app.route("/wordfreq", methods=['POST'])
 def wordfreq():
-    return render_template('wordfreq.html', countries=json.loads(os.getenv('COUNTRIES')))
+    return render_template('wordfreq.html',
+                           start_date=str(date.today() - timedelta(days=14)),
+                           end_date=str(date.today()),
+                           countries=json.loads(os.getenv('COUNTRIES')))
 
 
 @app.route("/selection", methods=['POST'])
@@ -106,15 +112,19 @@ def check_selection():
         payload['labels'] = []
     else:
         payload['labels'] = payload['labels'].split(',')
-
-    payload['start_date'] = datetime.strptime(payload['start_date'], '%Y-%m-%d')
-    payload['end_date'] = datetime.strptime(payload['end_date'], '%Y-%m-%d')
-    df = read_db("TL", country_codes[payload['country']], payload['start_date'], payload['end_date'])
-    df_date_count = df.groupby('date')['ID'].count()
+    
+    country_data = []
+    for country in country_codes.keys():
+        if country in payload.keys():
+            if type(payload['start_date']) == str:
+                payload['start_date'] = datetime.strptime(payload['start_date'], '%Y-%m-%d')
+                payload['end_date'] = datetime.strptime(payload['end_date'], '%Y-%m-%d')
+            df = read_db("TL", country_codes[country], payload['start_date'], payload['end_date'])
+            df_date_count = df.groupby('date')['ID'].count()
+            country_data.append((country, len(df), df_date_count.to_dict()))
+    
     return render_template('selection.html',
-                           date_count=df_date_count.to_dict(),
-                           number_messages=len(df),
-                           country=payload['country'],
+                           country_data=country_data,
                            start_date=payload['start_date'].strftime('%Y-%m-%d'),
                            end_date=payload['end_date'].strftime('%Y-%m-%d'),
                            labels=', '.join(payload['labels']),
@@ -126,7 +136,8 @@ def check_selection():
 def process_request():
     payload = {}
     for field in request.form.keys():
-        payload[field] = request.form[field]
+        if field not in country_codes.keys():
+            payload[field] = request.form[field]
 
     if 'labels' in payload.keys():
         if payload['labels'] != '':
@@ -135,15 +146,19 @@ def process_request():
             payload['multi_label'] = True
         else:
             payload.pop('labels')
-
-    payload['country_code'] = country_codes[payload['country']]
-    payload['config_file'] = payload['country'] + '_' + payload['request'] + '.yaml'
-    payload.pop('country')
-
-    url = os.getenv(payload['request'].upper()+"_URL")
-    payload.pop('request')
-
-    r = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
+    payload_base = payload.copy()
+      
+    for country in country_codes.keys():
+        if country in request.form.keys():
+            payload = payload_base.copy()
+            payload['country_code'] = country_codes[country]
+            payload['config_file'] = country + '_' + payload['request'] + '.yaml'
+        
+            url = os.getenv(payload['request'].upper()+"_URL")
+            payload.pop('request')
+        
+            r = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
+            
     if r.status_code == 200 or r.status_code == 202:
         return render_template('sent.html')
     else:

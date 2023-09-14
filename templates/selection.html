@@ -11,14 +11,16 @@
     <div class="container p-5 has-text-centered">
         <div class="columns is-centered">
             <div class="column is-one-quarter-desktop">
-                <div class="block my-3">
-                    <div class="field my-5">
-                        <label for="" class="label">We found {{ number_messages }} messages currently available for {{ country }} from {{ start_date }} to {{ end_date }}.</label>
-                    </div>
-                </div>
-                {% for date, count in date_count.items() %}
-                  <label for="" class="label is-small">{{ date }}: {{ count }}</label>
-                {% endfor %}
+              {% for country, number_messages, date_count in country_data %}
+                  <div class="block my-3">
+                      <div class="field my-5">
+                          <label for="" class="label">We found {{ number_messages }} messages currently available for {{ country }} from {{ start_date }} to {{ end_date }}.</label>
+                      </div>
+                  </div>
+                  {% for date, count in date_count.items() %}
+                    <label for="" class="label is-small">{{ date }}: {{ count }}</label>
+                  {% endfor %}
+              {% endfor %}
             </div>
         </div>
     </div>
@@ -33,7 +35,9 @@
               <div class="block my-3">
                 <form action="/sent" method="POST">
                   <div class="control my-5">
-                      <div class="control"><input class="input" type="hidden" name="country" value={{country}}></div>
+                      {% for country, number_messages, date_count in country_data %}
+                        <div class="control"><input class="input" type="hidden" name={{country}} value={{country}}></div>
+                      {% endfor %}
                       <div class="control"><input class="input" type="hidden" name="start_date" value={{start_date}}></div>
                       <div class="control"><input class="input" type="hidden" name="end_date" value={{end_date}}></div>
                       <div class="control"><input class="input" type="hidden" name="request" value={{request}}></div>

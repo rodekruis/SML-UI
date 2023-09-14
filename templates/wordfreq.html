@@ -16,12 +16,12 @@
             <form action="/selection" method="POST">
               <div class="field my-5">
                 <label for="" class="label">from date</label>
-                <div class="control"><input class="input" type="date" name="start_date" value="2022-09-01"/></div>
+                <div class="control"><input class="input" type="date" name="start_date" value={{start_date}}></div>
                 <label for="" class="label">to date</label>
-                <div class="control"><input class="input" type="date" name="end_date" value="2022-09-15"/></div>
+                <div class="control"><input class="input" type="date" name="end_date" value={{end_date}}></div>
                 <label for="" class="label">country</label>
                 {% for country in countries %}
-                  <input type="radio" id={{country}} name=country value={{country}}>
+                  <input type="checkbox" id={{country}} name={{country}} value={{country}}>
                   <label for={{country}}>{{country}}</label><br>
                 {% endfor %}
                 <div class="control"><input class="input" type="hidden" name="request" value="word_freq"/></div>
